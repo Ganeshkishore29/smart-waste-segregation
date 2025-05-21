@@ -1,0 +1,28 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.pkl
+
+# Environment
+venv/
+.env
+
+# Django
+*.log
+*.pot
+*.pyc
+db.sqlite3
+
+# VSCode / IDE
+.vscode/
+.idea/
+
+# Node
+node_modules/
+build/
+dist/
+
+# React build (if you have a React frontend)
+frontend/node_modules/
+frontend/build/
