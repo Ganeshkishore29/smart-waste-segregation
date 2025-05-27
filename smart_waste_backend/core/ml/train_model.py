@@ -29,17 +29,17 @@ df['label']=le_label.fit_transform(df['label'])
 
 
 #split the inputs(features) and output(label)
-X=df[['weight','color','texture','size','shape']]
+X=df[['weight','color','texture','size','shape']]  # 2D array- 1 sample with 5 features
 y=df['label']
 
 
 #split the train and test
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3,stratify=y, random_state=42) # sratify is split the label (if plastic is 3 in dataset it will by 2plastic is train and other is test/ if is not all three plastics is move to the train)
 
 
 #train Ml model
 model=GradientBoostingClassifier()
-model.fit(X_train,y_train)  #train the model. by gien data
+model.fit(X_train,y_train)  #train the model. by given data
 
 #test
 y_pred=model.predict(X_test)
@@ -61,7 +61,6 @@ joblib.dump(le_texture, encoder_texture_path)
 joblib.dump(le_size, encoder_size_path)
 joblib.dump(le_shape, encoder_shape_path)
 joblib.dump(le_label, encoder_label_path)
-import joblib
 
-le_color = joblib.load(encoder_label_path)
-print(le_color.classes_)
+le_label = joblib.load(encoder_label_path)
+print(le_label.classes_)
