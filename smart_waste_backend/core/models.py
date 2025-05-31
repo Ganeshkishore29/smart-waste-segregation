@@ -12,11 +12,14 @@ class WasteInput(models.Model):
     def __str__(self):
         return f" WasteInput by {self.user.username} at {self.created_at.strftime('%Y-%m-%d')}"
 
+
 class Prediction(models.Model):
-    waste_input=models.ForeignKey(WasteInput,on_delete=models.CASCADE)
-    predicted_label=models.CharField(max_length=100)
-    recycle_tip=models.TextField()
-    created_at=models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True) 
+    waste_input = models.ForeignKey(WasteInput, on_delete=models.CASCADE)
+    predicted_label = models.CharField(max_length=100)
+    recycle_tip = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
     def __str__(self):
         return f"Prediction : {self.predicted_label}"
 

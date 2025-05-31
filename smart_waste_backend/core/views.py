@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import WasteInput,Prediction
-from .serializers import WasteInputSerializer,PredictionSerializer
+from .serializers import WasteInputSerializer,PredictionSerializer,FeedbackSerializer
 from django.conf import settings
 import joblib
 import os
@@ -14,7 +14,7 @@ class PredictWasteAPIView(APIView):
         permission_classes=[IsAuthenticated]
         waste_input_serializer=WasteInputSerializer(data=request.data)
         if waste_input_serializer.is_valid():
-            waste_input=waste_input_serializer.save(user=request.user)   #  store the inputs in waste_input is for encode the input to predict   and links the inpusts to the user
+            waste_input=waste_input_serializer.save(user=request.user)   #  store the inputs in waste_input is for encode the input to predict   and links the inputs to the user
             
 
             # load Ml model
@@ -29,6 +29,7 @@ class PredictWasteAPIView(APIView):
                 hash(waste_input.texture)%10,
                 hash(waste_input.shape)%10
             ]
+            
 
             #predict using the loaded model
             prediction=model.predict([features])[0]  # [0] is give prediction in str like 'orgainc/ without [0] is give list linke['organic]
@@ -44,11 +45,22 @@ class PredictWasteAPIView(APIView):
                     "Rubber": "Reuse or dispose of rubber at special collection points.",
                     }
             
-            recycle_tip=tips.get(prediction,"Dispose responsibly")
+            label_map={
+                    0: "Organic",
+                    1: "Metal",
+                    2: "Plastic",
+                    3: "Glass",
+                    4: "Paper",
+                    5: "E-waste",
+                    6: "Rubber"
+            }
+            
+            recycle_tip=tips.get(label_map.get(prediction),"Dispose responsibly")
 
             prediction_instance=Prediction.objects.create(
+                user=request.user,
                 waste_input=waste_input,
-                predicted_label=prediction,
+                predicted_label=label_map.get(prediction,"Unknown"),
                 recycle_tip=recycle_tip
 
             )
@@ -69,8 +81,30 @@ class RegisterUserView(APIView):
         password=request.data.get('password')
 
         if not username or not password:
-            return Response({'error':'Username and Password is requried'},status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error':'Username and Password are requried'},status=status.HTTP_400_BAD_REQUEST)
         if User.objects.filter(username=username):
             return Response({'error':'Username is already exixts'},status=status.HTTP_400_BAD_REQUEST)
         user=User.objects.create_user(username=username,password=password)
         return Response({'message':'User successfully created'},status=status.HTTP_201_CREATED)
+
+
+class FeedbackCreateView(APIView):
+    permission_classes=[IsAuthenticated]
+    def post(self,request):
+        try:
+            latest_prediction=Prediction.objects.filter(user=request.user).latest("created_at")
+        except Prediction.DoesNotExist:
+            return Response({"error":"No predictions found for the user."},status=status.HTTP_400_BAD_REQUEST)
+        feedback_serializer=FeedbackSerializer(data=request.data)
+        if feedback_serializer.is_valid():
+            feedback_serializer.save(user=request.user,prediction=latest_prediction)
+            return Response("Feedback Submitted",status=status.HTTP_200_OK)
+        else:
+            return Response(feedback_serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        
+class UserPredictionHistoryView(APIView):
+    permission_classes=[IsAuthenticated]
+    def get(self,request):
+        predictions=Prediction.objects.filter(user=request.user)
+        serializer=PredictionSerializer(predictions,many=True)
+        return Response(serializer.data)
