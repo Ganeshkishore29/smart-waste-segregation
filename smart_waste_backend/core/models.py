@@ -25,11 +25,18 @@ class Prediction(models.Model):
 
 
 class AdminLog(models.Model):
-    action=models.CharField(max_length=250)
-    user=models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=True)
+    ACTION_CHOICES = [
+    ("CREATE", "Create"),
+    ("DELETE", "Delete"),
+    ("UPDATE", "Update"),
+    ("INFO", "Info")
+    ]
+    action=models.CharField(max_length=25, choices=ACTION_CHOICES)
+    message=models.TextField(blank=True,null=True)
+    user=models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=True,limit_choices_to={'is_superuser':True})
     timestamp=models.DateTimeField(auto_now_add=True)
     def __str__(self):
-        return f"Log: {self.action}"
+        return f"Log: {self.action} - {self.timestamp.strftime("%Y/%m/%d, %H:%M:%S")}"
 
 class Feedback(models.Model):
     user=models.ForeignKey(User,on_delete=models.CASCADE)

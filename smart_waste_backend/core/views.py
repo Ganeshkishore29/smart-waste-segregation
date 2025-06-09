@@ -1,8 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import WasteInput,Prediction
-from .serializers import WasteInputSerializer,PredictionSerializer,FeedbackSerializer
+from .models import WasteInput,Prediction,AdminLog
+from .serializers import WasteInputSerializer,PredictionSerializer,FeedbackSerializer,AdminlogSerializer
 from django.conf import settings
 import joblib
 import os
@@ -108,3 +108,21 @@ class UserPredictionHistoryView(APIView):
         predictions=Prediction.objects.filter(user=request.user)
         serializer=PredictionSerializer(predictions,many=True)
         return Response(serializer.data)
+
+class AdminlogView(APIView):
+    permission_classes=[IsAuthenticated]
+    def get(self,request):
+        if not request.user.is_superuser:
+            return Response({'error':"Access denied "},status=status.HTTP_403_FORBIDDEN)
+        logs=AdminLog.objects.all().order_by('-timestamp')
+        serializer=AdminlogSerializer(logs,many=True)
+        return Response(serializer.data)
+
+    def post(self,request):
+        if not request.user.is_superuser:
+            return Response({'error':'Only admin can log'},status=status.HTTP_403_FORBIDDEN)
+        serializer=AdminlogSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data,status=status.HTTP_201_CREATED)
+        return Response(serializer.data,status=status.HTTP_400_BAD_REQUEST)

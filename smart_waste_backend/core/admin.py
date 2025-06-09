@@ -6,4 +6,3 @@ admin.site.register(AdminLog)
 admin.site.register(Feedback)
 
 
-
