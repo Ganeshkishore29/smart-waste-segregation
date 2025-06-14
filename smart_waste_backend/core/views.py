@@ -126,3 +126,12 @@ class AdminlogView(APIView):
             serializer.save(user=request.user)
             return Response(serializer.data,status=status.HTTP_201_CREATED)
         return Response(serializer.data,status=status.HTTP_400_BAD_REQUEST)
+    
+
+class GetUserView(APIView): 
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        return Response({
+            'username': request.user.username,
+            'is_superuser':request.user.is_superuser,
+        })
