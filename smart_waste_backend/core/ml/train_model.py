@@ -34,7 +34,7 @@ y=df['label']
 
 
 #split the train and test
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3,stratify=y, random_state=42) # sratify is split the label (if plastic is 3 in dataset it will by 2plastic is train and other is test/ if is not all three plastics is move to the train)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2,stratify=y, random_state=42) # sratify is split the label (if plastic is 3 in dataset it will by 2 plastic is train and other is test/ if is not all three plastics is move to the train)
 
 
 #train Ml model

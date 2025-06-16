@@ -14,7 +14,7 @@ export const Login = () => {
     if(isAuthenticated()){
       navigate('/')
     }
-  },[])
+  },[navigate])
   const handleSubmit = async (e) => {  // async fn hold the entire process untill process is completed
     e.preventDefault()  // prevent the refresh of the page on submit because in html form by default it refreshes the page
     console.log('Login submitted:', { username, password })  // log the username and password to the console for debugging
@@ -27,12 +27,14 @@ export const Login = () => {
       localStorage.setItem('token', accesstoken)  // store the token in local storage user stay login even after page refresh
       
       localStorage.setItem('refresh', response.data.refresh)  // store the refresh token in local storage
+      
       const userRes=await axios.get('http://localhost:8000/api/user/',{
         headers:{
           Authorization:`Bearer ${accesstoken}`,
         }
       })
       localStorage.setItem('user_info',JSON.stringify(userRes.data))
+      setError("")
       navigate('/')  // redirect to home page after successful login
       } catch (error) {
         console.error('Login failed:', error.response)  // log the error to the console for debugging
@@ -42,6 +44,7 @@ export const Login = () => {
   return (
     <div className="flex justify-center items-center h-screen bg-green-100">
       <form onSubmit={handleSubmit} className='bg-white p-6 rounded shadow-md w-80'>
+<img src="/images/login.svg" alt="Login" className="w-32 mx-auto mb-4" />
         <h2 className='text-2xl font-bold mb-4 text-center'>Login</h2>
           {error && <p className='text-red-500'>{error}</p>}
         <input type="text" placeholder='Username'value={username} onChange={(e)=> setUsername(e.target.value)} className='w-full p-2 mb-4 border border-gray-300 rounded' required />

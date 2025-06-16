@@ -1,17 +1,18 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import WasteInput,Prediction,AdminLog
+from .models import WasteInput,Prediction,AdminLog,Feedback
 from .serializers import WasteInputSerializer,PredictionSerializer,FeedbackSerializer,AdminlogSerializer
 from django.conf import settings
 import joblib
 import os
 from rest_framework.permissions import AllowAny,IsAuthenticated
 from django.contrib.auth.models import User
+from rest_framework_simplejwt.tokens import RefreshToken
 
 class PredictWasteAPIView(APIView):
+    permission_classes=[IsAuthenticated]
     def post(self,request):
-        permission_classes=[IsAuthenticated]
         waste_input_serializer=WasteInputSerializer(data=request.data)
         if waste_input_serializer.is_valid():
             waste_input=waste_input_serializer.save(user=request.user)   #  store the inputs in waste_input is for encode the input to predict   and links the inputs to the user
@@ -54,13 +55,13 @@ class PredictWasteAPIView(APIView):
                     5: "E-waste",
                     6: "Rubber"
             }
-            
-            recycle_tip=tips.get(label_map.get(prediction),"Dispose responsibly")
+            label=label_map.get(prediction, "Unknown")
+            recycle_tip=tips.get(label,"Dispose responsibly")
 
             prediction_instance=Prediction.objects.create(
                 user=request.user,
                 waste_input=waste_input,
-                predicted_label=label_map.get(prediction,"Unknown"),
+                predicted_label=label,
                 recycle_tip=recycle_tip
 
             )
@@ -85,6 +86,7 @@ class RegisterUserView(APIView):
         if User.objects.filter(username=username):
             return Response({'error':'Username is already exixts'},status=status.HTTP_400_BAD_REQUEST)
         user=User.objects.create_user(username=username,password=password)
+        RefreshToken.for_user(user)
         return Response({'message':'User successfully created'},status=status.HTTP_201_CREATED)
 
 
@@ -95,17 +97,23 @@ class FeedbackCreateView(APIView):
             latest_prediction=Prediction.objects.filter(user=request.user).latest("created_at")
         except Prediction.DoesNotExist:
             return Response({"error":"No predictions found for the user."},status=status.HTTP_400_BAD_REQUEST)
-        feedback_serializer=FeedbackSerializer(data=request.data)
+        feedback_serializer=FeedbackSerializer(data=request.data,partial=True)
         if feedback_serializer.is_valid():
             feedback_serializer.save(user=request.user,prediction=latest_prediction)
             return Response("Feedback Submitted",status=status.HTTP_200_OK)
         else:
             return Response(feedback_serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-        
+    def get(self, request):
+        feedback = Feedback.objects.filter(user=request.user).order_by('-submitted_at').first()
+        if feedback:
+            serializer = FeedbackSerializer(feedback)
+            return Response(serializer.data)
+        return Response({"detail": "No feedback found."}, status=404)
+
 class UserPredictionHistoryView(APIView):
     permission_classes=[IsAuthenticated]
     def get(self,request):
-        predictions=Prediction.objects.filter(user=request.user)
+        predictions=Prediction.objects.filter(user=request.user).order_by('-created_at')
         serializer=PredictionSerializer(predictions,many=True)
         return Response(serializer.data)
 
