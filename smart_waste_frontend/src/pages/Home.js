@@ -13,6 +13,7 @@ export const Home = () => {
   const [shape, setShape] = useState("");
   const [prediction, setPrediction] = useState(null);
   const [error, setError] = useState(""); 
+  const [submitting,setSubmitting]=useState(false)
   useEffect(() => {
     if (!isAuthenticated()) {
       navigate("/login"); 
@@ -20,19 +21,20 @@ export const Home = () => {
   }, []);
   const handleSubmit = async (e) => {
     e.preventDefault();
+      if (submitting) return;
+       setSubmitting(true);
+
 
     try {
-      const token = localStorage.getItem("token");
-      if(!token){
-      
-       token= await refreshAccessToken()
-       if (!token){
-        setError("You are not Authorized. Please login again")
-        navigate("/login")
-        return
+      let token = localStorage.getItem("token")
+      token= await refreshAccessToken()
+        if (!token){
+         setError("You are not Authorized. Please login again")
+         navigate("/login")
+         return
         
        }
-      }
+      
       const response = await axios.post(
         "http://localhost:8000/api/predict/",
         {
@@ -182,7 +184,7 @@ setShape("");
         </table>
 
         <button
-          type="submit"
+          type="submit" onclick={setSubmitting}
           className="mt-6 w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition"
         >
           Predict

@@ -109,6 +109,29 @@ class FeedbackCreateView(APIView):
             serializer = FeedbackSerializer(feedback)
             return Response(serializer.data)
         return Response({"detail": "No feedback found."}, status=404)
+class LatestPredictionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        print("Request User:", request.user)
+        predictions = Prediction.objects.filter(user=request.user)
+        print("Predictions Count:", predictions.count())
+
+        latest_prediction = predictions.order_by('-created_at').first()
+
+        if latest_prediction:
+            serializer = PredictionSerializer(latest_prediction)
+            return Response({
+                "prediction": serializer.data,
+                "debug_user": request.user.username,
+                "found": True
+            })
+
+        return Response({
+            'detail': 'No prediction found.',
+            'debug_user': request.user.username,
+            'found': False
+        }, status=status.HTTP_404_NOT_FOUND)
 
 class UserPredictionHistoryView(APIView):
     permission_classes=[IsAuthenticated]

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import PredictWasteAPIView,RegisterUserView,FeedbackCreateView,UserPredictionHistoryView,AdminlogView,GetUserView
+from .views import PredictWasteAPIView,RegisterUserView,FeedbackCreateView,UserPredictionHistoryView,AdminlogView,GetUserView,LatestPredictionView
 from rest_framework_simplejwt.views import TokenObtainPairView,TokenRefreshView
 
 urlpatterns=[
@@ -10,5 +10,7 @@ urlpatterns=[
     path('feedback/',FeedbackCreateView.as_view(),name="feedback-create"),
     path('prediction/history/',UserPredictionHistoryView.as_view(),name='user-prediction-history'),
     path('admin/log/',AdminlogView.as_view(),name='admin-log'),
-    path('user/',GetUserView.as_view(),name='get-user')
+    path('user/',GetUserView.as_view(),name='get-user'),
+    path('prediction/latest/', LatestPredictionView.as_view(), name='latest-prediction'),
+
 ]
