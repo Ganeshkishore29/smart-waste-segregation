@@ -12,10 +12,10 @@ export const Home = () => {
   const [texture, setTexture] = useState("");
   const [shape, setShape] = useState("");
   const [prediction, setPrediction] = useState(null);
-  const [error, setError] = useState(""); // Error state to handle errors during prediction
+  const [error, setError] = useState(""); 
   useEffect(() => {
     if (!isAuthenticated()) {
-      navigate("/login"); // if user is not authenticated redirect to login page
+      navigate("/login"); 
     }
   }, []);
   const handleSubmit = async (e) => {
@@ -24,6 +24,7 @@ export const Home = () => {
     try {
       const token = localStorage.getItem("token");
       if(!token){
+      
        token= await refreshAccessToken()
        if (!token){
         setError("You are not Authorized. Please login again")
@@ -43,7 +44,7 @@ export const Home = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`, // send the token in the header to authenticate the user
+            Authorization: `Bearer ${token}`, 
           },
         }
       );
@@ -53,12 +54,12 @@ setSize("");
 setTexture("");
 setShape("");
 
-      setPrediction(response.data.prediction); // set the prediction state with the response data
-      setError(""); // clear any previous error messages
+      setPrediction(response.data.prediction); 
+      setError(""); 
     } catch (error) {
       setPrediction(null);
       console.error("Prediction error:", error.response?.data || error.message);
-      setError("Error during prediction. Please try again."); // if error occurs set the error message
+      setError("Error during prediction. Please try again."); 
     }
   };
   return (
